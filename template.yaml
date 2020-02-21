@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Setup notifications from CodePipeline to AWS Chatbot
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: codepipeline-chatbot
+    Description: Setup notifications from CodePipeline to AWS Chatbot
+    Author: Symphonia
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ['codepipeline', 'cd', 'devops', 'chatbot', 'chatops', 'slack']
+    HomePageUrl: https://github.com/symphoniacloud/codepipline-chatbot
+    SourceCodeUrl: https://github.com/symphoniacloud/codepipline-chatbot
+
+Parameters:
+  CodePipeline:
+    Description: The name of the CodePipeline to capture notifications from. Equal to the "Ref" value of the AWS::CodePipeline::Pipeline resource
+    Type: String
+  NotificationRuleName:
+    Description: Set if you wish to override the name given to the CodeStar Notification Rule. Defaults to the value of the CodePipeline parameter.
+    Type: String
+    Default: ''
+    MaxLength: 64
+  DetailType:
+    Description: The level of detail to include in the notifications for this resource. (see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-codestarnotifications-notificationrule.html)
+    Default: FULL
+    Type: String
+
+Conditions:
+  NotificationRuleNameIsSet: !Not [!Equals [ !Ref NotificationRuleName, '' ]]
+
+Outputs:
+  SNSTopicName:
+    Description: Name of the SNS Topic that you can connect to AWS Chatbot
+    Value: !GetAtt PipelineNotificationsTopic.TopicName
+
+Resources:
+  PipelineNotificationsTopic:
+    Type: AWS::SNS::Topic
+  
+  PipelineNotificationsTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref PipelineNotificationsTopic
+      PolicyDocument: 
+        Statement:
+        - Action: 'SNS:Publish'
+          Effect: Allow
+          Resource: !Ref PipelineNotificationsTopic
+          Principal:
+            Service: codestar-notifications.amazonaws.com
+  
+  NotificationRule:
+    Type: AWS::CodeStarNotifications::NotificationRule
+    Properties:
+      # Name is required, unlike for most resource types
+      Name: !If [ NotificationRuleNameIsSet, !Ref NotificationRuleName, !Ref CodePipeline ]
+      Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${CodePipeline}"
+      DetailType: !Ref DetailType
+      EventTypeIds:
+        - codepipeline-pipeline-pipeline-execution-failed
+        - codepipeline-pipeline-pipeline-execution-canceled
+        - codepipeline-pipeline-pipeline-execution-started
+        - codepipeline-pipeline-pipeline-execution-resumed
+        - codepipeline-pipeline-pipeline-execution-succeeded
+        - codepipeline-pipeline-pipeline-execution-superseded
+      Targets:
+        - TargetType: SNS
+          TargetAddress: !Ref PipelineNotificationsTopic
