@@ -67,6 +67,7 @@ Resources:
         - codepipeline-pipeline-pipeline-execution-resumed
         - codepipeline-pipeline-pipeline-execution-succeeded
         - codepipeline-pipeline-pipeline-execution-superseded
+        - codepipeline-pipeline-manual-approval-needed
       Targets:
         - TargetType: SNS
           TargetAddress: !Ref PipelineNotificationsTopic
