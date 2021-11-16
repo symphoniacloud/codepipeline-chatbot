@@ -4,7 +4,7 @@ sam package \
     --region us-east-1 \
     --template-file template.yaml \
     --output-template-file packaged.yaml \
-    --s3-bucket sam-artifacts-073101298092-us-east-1
+    --s3-bucket cloudformation-artifacts-073101298092-us-east-1
 
 sam publish \
     --region us-east-1 \
