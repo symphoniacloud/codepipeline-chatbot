@@ -26,7 +26,7 @@ Next, in the `Resources` section of your template, add a SAR resource as follows
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:073101298092:applications/codepipeline-chatbot
-        SemanticVersion: 1.0.0
+        SemanticVersion: 1.0.1
       Parameters:
         CodePipeline: 'YOUR_CODEPIPELINE_NAME'
 ```
